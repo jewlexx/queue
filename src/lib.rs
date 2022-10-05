@@ -2,7 +2,7 @@ use std::task::Poll;
 
 pub trait QueueFn: Fn() + Sized + Send + Sync + 'static {}
 
-pub struct QueueItem<F> {
+pub struct QueueItem<F: QueueFn> {
     func: F,
     promise: Option<Poll<()>>,
 }
@@ -24,14 +24,23 @@ impl<F: QueueFn> QueueItem<F> {
     }
 }
 
-#[derive(Default)]
-pub struct Queue<F> {
+pub struct Queue<F: QueueFn> {
     queue: Vec<QueueItem<F>>,
+    max_threads: usize,
+}
+
+impl<F: QueueFn> Default for Queue<F> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<F: QueueFn> Queue<F> {
     pub const fn new() -> Self {
-        Self { queue: Vec::new() }
+        Self {
+            queue: Vec::new(),
+            max_threads: 1,
+        }
     }
 
     pub fn add(&mut self, func: F) {
