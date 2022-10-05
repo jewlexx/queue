@@ -62,7 +62,9 @@ impl<F: QueueFn> Queue<F> {
                 }
             });
 
-            for item in &self.queue {}
+            let unstarted = self.queue.iter().filter(|item| item.thread.is_none());
+
+            for item in unstarted {}
         }
     }
 }
