@@ -4,14 +4,14 @@ pub trait QueueFn: Fn() + Sized + Send + Sync + 'static {}
 
 pub struct QueueItem<F: QueueFn> {
     func: F,
-    promise: Option<Poll<()>>,
+    finished: bool,
 }
 
 impl<F: QueueFn> QueueItem<F> {
     pub fn new(func: F) -> Self {
         Self {
             func,
-            promise: None,
+            finished: false,
         }
     }
 
@@ -19,8 +19,8 @@ impl<F: QueueFn> QueueItem<F> {
         (self.func)();
     }
 
-    pub(crate) fn execution(&self) -> Option<&Poll<()>> {
-        self.promise.as_ref()
+    pub fn is_finished(&self) -> bool {
+        self.finished
     }
 }
 
@@ -48,5 +48,13 @@ impl<F: QueueFn> Queue<F> {
     pub fn add(&mut self, func: F) {
         let item = QueueItem::new(func);
         self.queue.push(item);
+    }
+
+    pub async fn execute(&mut self) {
+        while !self.queue.is_empty() {
+            let item = self.queue.remove(0);
+            let item = Box::new(item);
+            std::thread::spawn(item.func);
+        }
     }
 }
