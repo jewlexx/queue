@@ -1,16 +1,16 @@
-use std::future::Future;
+use std::task::Poll;
 
-pub trait QueueFn: Fn() + Send + Sync + 'static {}
+pub trait QueueFn: Fn() + Sized + Send + Sync + 'static {}
 
 pub struct QueueItem<F> {
-    func: Box<F>,
-    promise: Option<Box<dyn Future<Output = ()>>>,
+    func: F,
+    promise: Option<Poll<()>>,
 }
 
 impl<F: QueueFn> QueueItem<F> {
     pub fn new(func: F) -> Self {
         Self {
-            func: Box::new(func),
+            func,
             promise: None,
         }
     }
@@ -19,8 +19,8 @@ impl<F: QueueFn> QueueItem<F> {
         (self.func)();
     }
 
-    pub(crate) fn execution(&self) -> Option<&dyn Future<Output = ()>> {
-        self.promise.as_ref().map(|p| p.as_ref())
+    pub(crate) fn execution(&self) -> Option<&Poll<()>> {
+        self.promise.as_ref()
     }
 }
 
