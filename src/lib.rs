@@ -46,7 +46,7 @@ impl<F: QueueFn> Queue<F> {
         }
     }
 
-    pub fn add(&mut self, func: F) {
+    pub fn add(&self, func: F) {
         let item = QueueItem::new(func);
         self.queue.lock().push(item);
     }
@@ -60,11 +60,11 @@ impl<F: QueueFn> Queue<F> {
 
             queue.retain(|item| !item.is_finished());
 
-            for mut item in queue.iter() {
-                let func = Box::new(&item.func);
+            // for mut item in queue.iter() {
+            //     let func = Box::new(&item.func);
 
-                let thread = std::thread::spawn(func);
-            }
+            //     let thread = std::thread::spawn(func);
+            // }
         }
     }
 }
