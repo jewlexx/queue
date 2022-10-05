@@ -62,16 +62,27 @@ impl<F: QueueFn> Queue<F> {
                 }
             });
 
-            let unstarted = self.queue.iter().enumerate().filter_map(|(index, thread)| {
-                if thread.thread.is_none() {
-                    Some((index, thread))
-                } else {
-                    None
-                }
-            });
+            let unstarted = self
+                .queue
+                .iter()
+                .enumerate()
+                .filter_map(|(index, thread)| {
+                    if thread.thread.is_none() {
+                        Some((index, thread))
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<_>>();
 
             for (i, item) in unstarted {
                 let func = Box::new(&item.func);
+
+                let thread = std::thread::spawn(func);
+            }
+
+            if self.queue.is_empty() {
+                break;
             }
         }
     }
