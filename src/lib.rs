@@ -8,7 +8,7 @@ pub struct QueueItem {
 }
 
 impl QueueItem {
-    pub fn new(func: &QueueFn) -> Self {
+    pub fn new(func: &'static QueueFn) -> Self {
         Self {
             func: Box::new(func),
             promise: None,
