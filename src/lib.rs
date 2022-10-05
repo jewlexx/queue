@@ -1,4 +1,4 @@
-use std::task::Poll;
+use parking_lot::Mutex;
 
 pub trait QueueFn: Fn() + Sized + Send + Sync + 'static {}
 
@@ -26,9 +26,9 @@ impl<F: QueueFn> QueueItem<F> {
 }
 
 pub struct Queue<F: QueueFn> {
-    queue: Vec<QueueItem<F>>,
-    max_threads: usize,
-    used_threads: usize,
+    queue: Mutex<Vec<QueueItem<F>>>,
+    max_threads: Mutex<usize>,
+    used_threads: Mutex<usize>,
 }
 
 impl<F: QueueFn> Default for Queue<F> {
@@ -40,9 +40,9 @@ impl<F: QueueFn> Default for Queue<F> {
 impl<F: QueueFn> Queue<F> {
     pub const fn new(max_threads: usize) -> Self {
         Self {
-            queue: Vec::new(),
-            max_threads,
-            used_threads: 0,
+            queue: Mutex::new(Vec::new()),
+            max_threads: Mutex::new(max_threads),
+            used_threads: Mutex::new(0),
         }
     }
 
@@ -53,29 +53,9 @@ impl<F: QueueFn> Queue<F> {
 
     pub async fn execute(&mut self) {
         loop {
-            self.queue.retain(|item| {
-                if item.is_finished() {
-                    self.used_threads -= 1;
-                    false
-                } else {
-                    true
-                }
-            });
+            self.queue.retain(|item| !item.is_finished());
 
-            let unstarted = self
-                .queue
-                .iter()
-                .enumerate()
-                .filter_map(|(index, thread)| {
-                    if thread.thread.is_none() {
-                        Some((index, thread))
-                    } else {
-                        None
-                    }
-                })
-                .collect::<Vec<_>>();
-
-            for (i, item) in unstarted {
+            for mut item in &mut self.queue {
                 let func = Box::new(&item.func);
 
                 let thread = std::thread::spawn(func);
