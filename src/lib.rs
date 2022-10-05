@@ -34,7 +34,7 @@ impl Queue {
         Self { queue: Vec::new() }
     }
 
-    pub fn add(&mut self, func: &QueueFn) {
+    pub fn add(&mut self, func: &'static QueueFn) {
         let item = QueueItem::new(func);
         self.queue.push(item);
     }
