@@ -52,10 +52,25 @@ impl<F: QueueFn> Queue<F> {
     }
 
     pub async fn execute(&mut self) {
-        while !self.queue.is_empty() {
-            let item = self.queue.remove(0);
-            let item = Box::new(item);
-            std::thread::spawn(item.func);
+        loop {
+            let queue = self
+                .queue
+                .iter()
+                .filter(|item| {
+                    if item.is_finished() {
+                        self.used_threads -= 1;
+                        false
+                    } else {
+                        true
+                    }
+                })
+                .collect::<Vec<_>>();
+
+            for (index, item) in queue.iter().enumerate() {
+                if item.is_finished() {
+                    self.used_threads -= 1;
+                }
+            }
         }
     }
 }
