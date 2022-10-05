@@ -1,14 +1,10 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+use std::future::Future;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub struct QueueItem(
+    Box<dyn Fn() + Send + Sync + 'static>,
+    dyn Future<Output = ()>,
+);
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+pub struct Queue {
+    queue: Vec<QueueItem>,
 }
