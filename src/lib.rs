@@ -1,9 +1,9 @@
 use std::future::Future;
 
-pub struct QueueItem(
-    Box<dyn Fn() + Send + Sync + 'static>,
-    dyn Future<Output = ()>,
-);
+pub struct QueueItem {
+    func: Box<dyn Fn() + Send + Sync + 'static>,
+    promise: Box<dyn Future<Output = ()>>,
+}
 
 pub struct Queue {
     queue: Vec<QueueItem>,
