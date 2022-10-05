@@ -62,11 +62,13 @@ impl<F: QueueFn> Queue<F> {
                 }
             });
 
-            let unstarted = self
-                .queue
-                .iter()
-                .enumerate()
-                .filter_map(|(index, thread)| thread.thread.map(|_| (index, thread)));
+            let unstarted = self.queue.iter().enumerate().filter_map(|(index, thread)| {
+                if thread.thread.is_none() {
+                    Some((index, thread))
+                } else {
+                    None
+                }
+            });
 
             for (i, item) in unstarted {
                 let func = Box::new(&item.func);
