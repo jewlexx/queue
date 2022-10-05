@@ -53,20 +53,16 @@ impl<F: QueueFn> Queue<F> {
 
     pub async fn execute(&mut self) {
         loop {
-            let queue = self
-                .queue
-                .iter()
-                .filter(|item| {
-                    if item.is_finished() {
-                        self.used_threads -= 1;
-                        false
-                    } else {
-                        true
-                    }
-                })
-                .collect::<Vec<_>>();
+            self.queue.retain(|item| {
+                if item.is_finished() {
+                    self.used_threads -= 1;
+                    false
+                } else {
+                    true
+                }
+            });
 
-            for (index, item) in queue.iter().enumerate() {
+            for item in &self.queue {
                 if item.is_finished() {
                     self.used_threads -= 1;
                 }
