@@ -27,19 +27,21 @@ impl<F: QueueFn> QueueItem<F> {
 pub struct Queue<F: QueueFn> {
     queue: Vec<QueueItem<F>>,
     max_threads: usize,
+    used_threads: usize,
 }
 
 impl<F: QueueFn> Default for Queue<F> {
     fn default() -> Self {
-        Self::new()
+        Self::new(1)
     }
 }
 
 impl<F: QueueFn> Queue<F> {
-    pub const fn new() -> Self {
+    pub const fn new(max_threads: usize) -> Self {
         Self {
             queue: Vec::new(),
-            max_threads: 1,
+            max_threads,
+            used_threads: 0,
         }
     }
 
