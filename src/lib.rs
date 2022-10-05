@@ -48,21 +48,22 @@ impl<F: QueueFn> Queue<F> {
 
     pub fn add(&mut self, func: F) {
         let item = QueueItem::new(func);
-        self.queue.push(item);
+        self.queue.lock().push(item);
     }
 
-    pub async fn execute(&mut self) {
+    pub async fn execute(&self) {
         loop {
-            self.queue.retain(|item| !item.is_finished());
+            let mut queue = match self.queue.try_lock() {
+                Some(v) => v,
+                None => continue,
+            };
 
-            for mut item in &mut self.queue {
+            queue.retain(|item| !item.is_finished());
+
+            for mut item in queue.iter() {
                 let func = Box::new(&item.func);
 
                 let thread = std::thread::spawn(func);
-            }
-
-            if self.queue.is_empty() {
-                break;
             }
         }
     }
