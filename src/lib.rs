@@ -22,6 +22,13 @@ impl QueueItem {
     }
 }
 
+#[derive(Default)]
 pub struct Queue {
     queue: Vec<QueueItem>,
+}
+
+impl Queue {
+    pub const fn new() -> Self {
+        Self { queue: Vec::new() }
+    }
 }
