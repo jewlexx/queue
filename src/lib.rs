@@ -4,15 +4,12 @@ pub trait QueueFn: Fn() + Sized + Send + Sync + 'static {}
 
 pub struct QueueItem<F: QueueFn> {
     func: F,
-    finished: bool,
+    thread: Option<std::thread::JoinHandle<()>>,
 }
 
 impl<F: QueueFn> QueueItem<F> {
     pub fn new(func: F) -> Self {
-        Self {
-            func,
-            finished: false,
-        }
+        Self { func, thread: None }
     }
 
     pub fn run(&self) {
@@ -20,7 +17,11 @@ impl<F: QueueFn> QueueItem<F> {
     }
 
     pub fn is_finished(&self) -> bool {
-        self.finished
+        if let Some(ref thread) = self.thread {
+            thread.is_finished()
+        } else {
+            false
+        }
     }
 }
 
