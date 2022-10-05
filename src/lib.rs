@@ -62,11 +62,7 @@ impl<F: QueueFn> Queue<F> {
                 }
             });
 
-            for item in &self.queue {
-                if item.is_finished() {
-                    self.used_threads -= 1;
-                }
-            }
+            for item in &self.queue {}
         }
     }
 }
