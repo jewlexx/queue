@@ -1,14 +1,14 @@
 use std::future::Future;
 
-pub type QueueFn = dyn Fn() + Send + Sync + 'static;
+pub trait QueueFn: Fn() + Send + Sync + 'static {}
 
-pub struct QueueItem {
-    func: Box<QueueFn>,
+pub struct QueueItem<F> {
+    func: Box<F>,
     promise: Option<Box<dyn Future<Output = ()>>>,
 }
 
-impl QueueItem {
-    pub fn new(func: &'static QueueFn) -> Self {
+impl<F: QueueFn> QueueItem<F> {
+    pub fn new(func: F) -> Self {
         Self {
             func: Box::new(func),
             promise: None,
@@ -25,16 +25,16 @@ impl QueueItem {
 }
 
 #[derive(Default)]
-pub struct Queue {
-    queue: Vec<QueueItem>,
+pub struct Queue<F> {
+    queue: Vec<QueueItem<F>>,
 }
 
-impl Queue {
+impl<F: QueueFn> Queue<F> {
     pub const fn new() -> Self {
         Self { queue: Vec::new() }
     }
 
-    pub fn add(&mut self, func: &'static QueueFn) {
+    pub fn add(&mut self, func: F) {
         let item = QueueItem::new(func);
         self.queue.push(item);
     }
