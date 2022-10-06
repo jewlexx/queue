@@ -60,7 +60,7 @@ impl<F: QueueFn> Queue<F> {
 
             queue.retain(|item| !item.is_finished());
 
-            for mut item in queue {
+            for mut item in queue.iter() {
                 let func = Box::new(&item.func);
 
                 let thread = std::thread::spawn(func);
