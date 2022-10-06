@@ -53,18 +53,15 @@ impl<F: QueueFn> Queue<F> {
 
     pub async fn execute(&self) {
         loop {
-            let mut queue = match self.queue.try_lock() {
-                Some(v) => v,
-                None => continue,
+            if let Some(queue) = self.queue.try_lock() {
+                queue.retain(|item| !item.is_finished());
+
+                for mut item in queue.iter() {
+                    let func = Box::new(&item.func);
+
+                    let thread = std::thread::spawn(func);
+                }
             };
-
-            queue.retain(|item| !item.is_finished());
-
-            for mut item in queue.iter() {
-                let func = Box::new(&item.func);
-
-                let thread = std::thread::spawn(func);
-            }
         }
     }
 }
