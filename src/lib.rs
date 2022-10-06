@@ -53,7 +53,7 @@ impl<F: QueueFn> Queue<F> {
 
     pub async fn execute(&self) {
         loop {
-            if let Some(queue) = self.queue.try_lock() {
+            if let Some(mut queue) = self.queue.try_lock() {
                 queue.retain(|item| !item.is_finished());
 
                 for mut item in queue.iter() {
@@ -61,7 +61,7 @@ impl<F: QueueFn> Queue<F> {
 
                     let thread = std::thread::spawn(func);
                 }
-            };
+            }
         }
     }
 }
